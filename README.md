@@ -30,14 +30,14 @@ The following sections break down the overall approach:
             - The quality variants H/M/L add 5/3/2 minutes of tool wear to the used tool in the process. and a 'machine failure' label that indicates, whether the machine has failed in this particular data point for any of the following failure modes are true.      
     - ***Targets (Y)***
         - *Target*
-            - 0 (No Failure) or 1 (No Failure)
+            - 0 (No Failure)
+            - 1 (Failure)
         - *Failure Type*
-            - Type of Failure
-                - Heat Dissipation Failure
-                - Overstrain Failure
-                - Power Failure
-                - Random Failures
-                - Tool Wear Failure
+            - Heat Dissipation Failure
+            - Overstrain Failure
+            - Power Failure
+            - Random Failures
+            - Tool Wear Failure
 2. **Analyses and Conclusions**
     - ***Data Cleaning and Manipulation***
         - Split the data into training and test sets  
