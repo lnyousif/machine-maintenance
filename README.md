@@ -35,6 +35,7 @@ The following sections break down the overall approach:
         - *Failure Type*
             - Heat Dissipation Failure
             - Overstrain Failure
+            - No Failure
             - Power Failure
             - Random Failures
             - Tool Wear Failure
