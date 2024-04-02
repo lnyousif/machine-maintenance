@@ -1,6 +1,6 @@
 # MACHINE MAINTENANCE ANALYSIS
 
-Group 3 analyzed a synthetic dataset for determining machine failures. Six features were provided, while a multivariate target included failure types. The end result was that X variable(s) had the biggest impact on probability of machine failure (or Y and Z variables had the biggest impact on various failure types).
+Group 3 analyzed a synthetic dataset for determining machine failures. Six features were provided, while a multivariate target included failure types. The end result was that X variable(s) had the biggest impact on machine failure (or Y and Z variables had the biggest impact on various failure types) to develop a preventative maintanence plan.
 
 --------------------------------------------------------------------------------------
 The team approached this analysis in the following manner:
@@ -41,6 +41,7 @@ The following sections break down the overall approach:
             - Tool Wear Failure
 2. **Analyses and Conclusions**
     - ***Data Cleaning and Manipulation***
+        - Scaled the data in the feature columns
         - Split the data into training and test sets  
         - xxx
     - ***Pipeline***
@@ -50,12 +51,12 @@ The following sections break down the overall approach:
     - ***xxx***
         -   xxx
 
-    | **Model** | **Accuracy Score** |
-    | --- | --- |
-    | xxx | xxx |
-    | xxx | xxx |
+    | **Model** | **Accuracy Score** | **Data Prepocessing** |
+    | --- | --- | --- |
+    | xxx | xxx | xxx |
+    | xxx | xxx | xxx |
 3. **Next Steps**
-    - xxx
+    - Develop a preventative maintanence plan
     - xxx
     - xxx
 
