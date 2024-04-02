@@ -7,8 +7,10 @@ from sklearn.preprocessing import (
     StandardScaler,
     FunctionTransformer,
 )
+import pickle
 from imblearn.pipeline import make_pipeline
 from imblearn.over_sampling import RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
 from imblearn.pipeline import Pipeline as Pipeline_imb
 from sklearn.naive_bayes import GaussianNB
 from sklearn.compose import ColumnTransformer
@@ -101,6 +103,9 @@ def _get_param_grid(model_type):
     }
     return param_dict[model_type]
 
+def name_feat(input_feature, category):
+    return f"if-{input_feature}-c-{category}"
+
 
 def preprocess(X_train, y_train, label_cols=None):
     encoder_transformers = []
@@ -114,8 +119,9 @@ def preprocess(X_train, y_train, label_cols=None):
     encoder = [
         (
             "ohe",
-            OneHotEncoder(handle_unknown="ignore", sparse_output=False, dtype="int"),
-            X_train.columns.tolist(),
+            OneHotEncoder(handle_unknown="ignore", sparse_output=False, dtype="int", feature_name_combiner=name_feat),
+            # X_train.columns.tolist(),
+            ['Type']
         ),
         *encoder_transformers,
     ]
@@ -187,22 +193,34 @@ def model_generator(X_train, y_train, preprocessor, models=None):
         ]
     pipelines = []
     for name, model in models:
-        pipeline = Pipeline_imb(
-            steps=[
-                preprocessor,
-                # ('debug post', DebugTransformer()),
-                ("oversampler", RandomOverSampler()),
-                ("classifier", model),
-            ]
-        )
+        samplers = [
+            ("raw", "passthrough"),
+            ("over", RandomOverSampler()),
+            ("under", RandomUnderSampler()),
+        ]
+        samplers = [x for x in samplers if x is not None]
+        for sampler in samplers:
+            pipeline = Pipeline_imb(
+                steps=[
+                    preprocessor,
+                    # ('debug post', DebugTransformer()),
+                    sampler,
+                    ("classifier", model),
+                ]
+            )
 
-        pipeline.fit(X_train, y_train)
-        pipelines.append((name, pipeline))
-    return pipelines
+            pipeline.fit(X_train, y_train)
+            pipelines.append((name, pipeline))
+    print(type(pipeline))
+    try:
+        with open("pipeline.pickle", "wb") as write_file:
+            pickle.dump(pipelines, write_file)
+    finally:
+        return pipelines
 
 
 def evaluate(pipelines, X_test, y_test):
-    reports = []
+    reports = {}
     # TODO add cross-validation
     target_names = ["negative", "positive"]
     for p in pipelines:
@@ -222,15 +240,19 @@ def evaluate(pipelines, X_test, y_test):
         # if r2_adj_value < 0.4:
         #     print("WARNING: LOW ADJUSTED R-SQUARED VALUE")
 
-        reports.append(
-            {
-                "model": p[0],
-                # 'mse': mse,
-                # 'r2_value': r2_value,
-                # 'r2_adj_value': r2_adj_value,
-                "report": report,
-            }
-        )
+
+        # For this formatting
+        # model: {
+        #     raw: report,
+        #     over: report,
+        #     under: report,
+        # }
+        sampler = list(p[1].named_steps.keys())[1]
+        if p[0] not in reports:
+            reports[p[0]] = {}
+        if sampler not in reports[p[0]]:
+            reports[p[0]][sampler] = {}
+        reports[p[0]][sampler] = report
 
     return reports
 
