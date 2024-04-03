@@ -160,8 +160,9 @@ class DebugTransformer(BaseEstimator, TransformerMixin):
         # print('Preprocessed data shape:', X.shape)
         # if 'info' in X.keys():
         #     print('Preprocessed data:', X.info())
-        print("Preprocessed data X:", X)
-        print("Preprocessed data y:", y)
+        # print("Preprocessed data X:", X)
+        # print("Preprocessed data y:", y)
+        print(len(X))
         return self
 
     def transform(self, X):
@@ -232,6 +233,9 @@ def evaluate(pipelines, X_test, y_test):
         # r2_value = r2_score(y_test, y_pred)
         # r2_adj_value = _r2_adj(X_test, y_test, p[1])
         report = classification_report(y_test, y_pred, target_names=target_names)
+
+        # Debugging reports
+        # print('score', p[1].score(X_test, y_test))
 
         # Print out the MSE, r-squared, and adjusted r-squared values
         # print(f"Mean Squared Error: {mse}")
