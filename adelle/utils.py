@@ -12,6 +12,7 @@ from imblearn.over_sampling import RandomOverSampler
 from imblearn.pipeline import Pipeline as Pipeline_imb
 from sklearn.naive_bayes import GaussianNB
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
 from scipy.stats import shapiro, jarque_bera
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
@@ -26,6 +27,7 @@ from sklearn.ensemble import (
     GradientBoostingClassifier,
     AdaBoostClassifier,
 )
+import numpy as np
 
 # Label encodng before split, scaling after split
 # Hyperplace graph
@@ -233,6 +235,64 @@ def evaluate(pipelines, X_test, y_test):
         )
 
     return reports
+
+
+def create_pca_analysis_pipeline(X_train, y_train, label_cols=None, n_components=5):
+    """
+    Creates a pipeline that includes preprocessing (as defined by the `preprocess` function)
+    and PCA for the purpose of feature importance analysis.
+
+    Args:
+    - X_train: Training data features.
+    - y_train: Training data labels.
+    - label_cols: Columns to be label encoded.
+    - n_components: Number of principal components for PCA.
+
+    Returns:
+    - A scikit-learn Pipeline object that includes preprocessing and PCA.
+    """
+    # Generate the preprocessor using the provided `preprocess` function
+    _, preprocessor = preprocess(X_train, y_train, label_cols=label_cols)
+
+    # Create the analysis pipeline
+    pca_analysis_pipeline = Pipeline(
+        [
+            ("preprocessor", preprocessor),  # Preprocessing as defined by `preprocess`
+            ("pca", PCA(n_components=n_components)),  # PCA for feature importance
+        ]
+    )
+    return pca_analysis_pipeline
+
+
+def analyze_pca_feature_importance(X, pca_analysis_pipeline):
+    """
+    Fits the PCA analysis pipeline to the data and prints the top contributing
+    features for each principal component based on their loadings.
+
+    Args:
+    - X: The data to analyze (features only).
+    - pca_analysis_pipeline: The PCA analysis pipeline.
+    """
+    # Fit the PCA analysis pipeline to the data
+    pca_analysis_pipeline.fit(X)
+    pca = pca_analysis_pipeline.named_steps["pca"]
+
+    # Access the ColumnTransformer to get the feature names after preprocessing
+    preprocessor = pca_analysis_pipeline.named_steps["preprocessor"]
+    feature_names = preprocessor.get_feature_names_out()
+
+    print("Top contributing features by component:")
+    for index, component in enumerate(pca.components_):
+        print(f"Component {index+1}:")
+        # Get the absolute values of the loadings for sorting
+        abs_loadings = np.abs(component)
+        sorted_feature_indices = abs_loadings.argsort()[::-1]
+        # Print the names and loadings of the top features for this component
+        for feature_index in sorted_feature_indices[
+            :5
+        ]:  # Adjust the number to show more/less features
+            print(f"  {feature_names[feature_index]}: {component[feature_index]:.3f}")
+        print()  # Add a newline for better readability
 
 
 if __name__ == "__main__":
