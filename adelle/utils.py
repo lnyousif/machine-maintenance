@@ -30,6 +30,8 @@ from sklearn.ensemble import (
     AdaBoostClassifier,
 )
 import numpy as np
+import pandas as pd
+import statsmodels.api as sm
 
 # Label encodng before split, scaling after split
 # Hyperplace graph
@@ -105,6 +107,7 @@ def _get_param_grid(model_type):
     }
     return param_dict[model_type]
 
+
 def name_feat(input_feature, category):
     return f"if-{input_feature}-c-{category}"
 
@@ -121,9 +124,14 @@ def preprocess(X_train, y_train, label_cols=None):
     encoder = [
         (
             "ohe",
-            OneHotEncoder(handle_unknown="ignore", sparse_output=False, dtype="int", feature_name_combiner=name_feat),
+            OneHotEncoder(
+                handle_unknown="ignore",
+                sparse_output=False,
+                dtype="int",
+                feature_name_combiner=name_feat,
+            ),
             # X_train.columns.tolist(),
-            ['Type']
+            ["Type"],
         ),
         *encoder_transformers,
     ]
@@ -246,7 +254,6 @@ def evaluate(pipelines, X_test, y_test):
         # if r2_adj_value < 0.4:
         #     print("WARNING: LOW ADJUSTED R-SQUARED VALUE")
 
-
         # For this formatting
         # model: {
         #     raw: report,
@@ -319,6 +326,74 @@ def analyze_pca_feature_importance(X, pca_analysis_pipeline):
         ]:  # Adjust the number to show more/less features
             print(f"  {feature_names[feature_index]}: {component[feature_index]:.3f}")
         print()  # Add a newline for better readability
+
+
+def preprocess_and_convert_to_df(X, y, preprocess_function, label_cols=None):
+    """
+    Applies preprocessing defined by `preprocess_function` to X and y, and converts the result to a DataFrame.
+
+    Args:
+    - X: The feature set.
+    - y: The target variable.
+    - preprocess_function: The preprocessing function to apply, which returns a tuple.
+    - label_cols: Columns to be label-encoded, passed to `preprocess_function`.
+
+    Returns:
+    - A tuple of (preprocessed_X_df, y), where preprocessed_X_df is a DataFrame with preprocessed features.
+    """
+    # Run the preprocess function and get the ColumnTransformer
+    _, preprocessor = preprocess(X, y, label_cols=label_cols)
+
+    # Apply preprocessing
+    X_preprocessed = preprocessor.fit_transform(X)
+
+    # Assuming 'preprocessor' has a method to retrieve the transformed feature names
+    feature_names = preprocessor.get_feature_names_out()
+
+    # Convert to DataFrame
+    X_preprocessed_df = pd.DataFrame(X_preprocessed, columns=feature_names)
+
+    return X_preprocessed_df, y
+
+
+def print_linear_regression_pvalues(X, y):
+    """
+    Calculates and prints p-values for a linear regression model.
+
+    Args:
+    - X: Preprocessed features as a DataFrame.
+    - y: The target variable.
+    """
+    # Reset indices to ensure alignment
+    X = X.reset_index(drop=True)
+    y = y.reset_index(drop=True)
+
+    # Adding a constant to X for the intercept.
+    X_with_constant = sm.add_constant(X)
+    model = sm.OLS(y, X_with_constant).fit()
+
+    print("\nLinear Regression P-Values:")
+    print(model.pvalues.sort_values())
+
+
+def print_logistic_regression_pvalues(X, y):
+    """
+    Calculates and prints p-values for a logistic regression model.
+
+    Args:
+    - X: Preprocessed features as a DataFrame.
+    - y: The target variable.
+    """
+    # Reset indices to ensure alignment
+    X = X.reset_index(drop=True)
+    y = y.reset_index(drop=True)
+
+    # Adding a constant to X for the intercept.
+    X_with_constant = sm.add_constant(X)
+    model = sm.Logit(y, X_with_constant).fit()
+
+    print("\nLogistic Regression P-Values:")
+    print(model.pvalues.sort_values())
 
 
 if __name__ == "__main__":
